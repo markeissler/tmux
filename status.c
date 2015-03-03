@@ -437,7 +437,7 @@ char *
 status_replace(struct client *c, struct session *s, struct winlink *wl,
     struct window_pane *wp, const char *fmt, time_t t, int jobsflag)
 {
-	static char		 out[BUFSIZ];
+	char		 	 out[BUFSIZ];
 	char			 in[BUFSIZ], ch, *iptr, *optr, *expanded;
 	size_t			 len;
 	struct format_tree	*ft;
@@ -521,6 +521,32 @@ status_find_job(struct client *c, char **iptr)
 	}
 	(*iptr)++;			/* skip final ) */
 	cmd[len] = '\0';
+
+	/* Send command content back through status_replace */
+	if (strchr(cmd, '#') != NULL) {
+		time_t t = c->status_timer.tv_sec;
+		size_t cmd_len = strlen(cmd);
+		log_debug("%s: cmd (in) '%s'", __func__, cmd);
+		log_debug("%s: cmd_len (in) '%d'", __func__, (int)cmd_len);
+
+		char *cmd_replaced = status_replace(c, NULL, NULL, NULL, cmd, t, 1);
+		size_t cmd_replaced_len=strlen(cmd_replaced);
+
+		log_debug("%s: cmd_replaced '%s'", __func__, cmd_replaced);
+		log_debug("%s: cmd_replaced_len '%d'", __func__, (int)cmd_replaced_len);
+
+		// copy back cmd_replaced to cmd
+		if (cmd_len != cmd_replaced_len) {
+			cmd = xrealloc(cmd, 1, cmd_replaced_len+1);
+		}
+		memcpy(cmd, cmd_replaced, cmd_replaced_len);
+		cmd[cmd_replaced_len] = '\0';
+
+		log_debug("%s: cmd (out) '%s'", __func__, cmd);
+		log_debug("%s: cmd_len (out) '%d'", __func__, strlen(cmd));
+
+		free(cmd_replaced);
+	}
 
 	/* First try in the new tree. */
 	so_find.cmd = cmd;
