@@ -30,6 +30,13 @@ Run the following in your command-line:
 
 ## Usage
 
+To list available configuration options run:
+
+```sh
+>brew options tmux-19a1
+>brew info tmux-19a1
+```
+
 Once the tap is installed, you can proceed with `tmux-1.9a1` by running the following from your command-line:
 
 ```sh
